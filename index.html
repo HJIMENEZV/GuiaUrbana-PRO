@@ -36,6 +36,7 @@
             position: absolute;
             top: 0; left: 0;
             z-index: 1;
+            background: #111827; /* Fondo oscuro por si demora en cargar */
         }
 
         /* Top Bar flotante */
@@ -295,9 +296,17 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     
     <script>
+        // Limpiar cachés antiguos de Service Workers para evitar persistencia de errores
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                for(let registration of registrations) {
+                    registration.unregister();
+                }
+            });
+            caches.keys().then(names => {
+                for (let name of names) {
+                    caches.delete(name);
+                }
             });
         }
 
@@ -310,8 +319,8 @@
         let stopsList = [];
         let totalDistanceKm = 0;
 
-        // Capa estándar de OpenStreetMap (Libre y sin restricciones de API Key)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Capa limpia de OpenStreetMap estándar
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
@@ -323,7 +332,7 @@
                 const lon = position.coords.longitude;
                 map.setView([lat, lon], 16);
                 updateMarkerPosition(lat, lon);
-                document.getElementById('location-name').textContent = `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+                document.getElementById('location-name').textContent = `${lat.toFixed(3)},${lon.toFixed(3)}`;
             }, null, { enableHighAccuracy: true });
         }
 
@@ -356,7 +365,6 @@
             toggleDrawer(false);
         }
 
-        // Lógica de Seguimiento y Paradas
         function toggleTrip() {
             const btn = document.getElementById('btn-toggle-trip');
             const status = document.getElementById('tracking-status');
@@ -407,7 +415,7 @@
 
                     if (dist < 0.005) {
                         const stopTime = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                        stopsList.push({ time: stopTime, coords: `${lat.toFixed(4)}, ${lon.toFixed(4)}` });
+                        stopsList.push({ time: stopTime, coords: `${lat.toFixed(4)},${lon.toFixed(4)}` });
                         document.getElementById('stat-stops').textContent = stopsList.length;
                         updateStopsUI();
                     }
@@ -420,6 +428,8 @@
 
             }, null, { enableHighAccuracy: true });
         }
+
+        function updateStopsUI`() {} // Soportado
 
         function updateStopsUI() {
             const container = document.getElementById('stops-list');
@@ -452,14 +462,12 @@
             document.getElementById('repDesc').value = '';
         }
 
-        // Lógica del Chat con IA
         function sendAiMessage() {
             const input = document.getElementById('chatInput');
             const text = input.value.trim();
             if (!text) return;
 
             const container = document.getElementById('chatMessages');
-            
             container.innerHTML += `<div class="chat-bubble user">${text}</div>`;
             input.value = '';
             container.scrollTop = container.scrollHeight;
