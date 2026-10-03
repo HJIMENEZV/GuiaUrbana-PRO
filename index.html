@@ -4,19 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GuíaUrbana PRO</title>
-    <!-- Enlace al Manifest para la PWA -->
+    <!-- Manifest y PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#2563eb">
+    <!-- Leaflet CSS para el Mapa Interactivo -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
     <style>
         :root {
             --primary: #2563eb;
-            --background: #f8fafc;
+            --primary-dark: #1d4ed8;
+            --background: #f1f5f9;
             --card-bg: #ffffff;
-            --text: #1e293b;
-            --text-light: #64748b;
+            --text: #0f172a;
+            --text-light: #475569;
+            --accent: #22c55e;
         }
         body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background-color: var(--background);
             color: var(--text);
             margin: 0;
@@ -26,15 +30,18 @@
             min-height: 100vh;
         }
         header {
-            background-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
-            padding: 1rem;
+            padding: 1.25rem 1rem;
             text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+        header p { margin: 0.25rem 0 0 0; font-size: 0.85rem; opacity: 0.9; }
+        
         main {
             flex: 1;
-            padding: 1.5rem;
+            padding: 1rem;
             max-width: 600px;
             margin: 0 auto;
             width: 100%;
@@ -43,75 +50,215 @@
         .card {
             background: var(--card-bg);
             padding: 1.25rem;
-            border-radius: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 1rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            margin-bottom: 1.25rem;
         }
-        h2 { margin-top: 0; color: var(--primary); font-size: 1.25rem; }
-        p { color: var(--text-light); font-size: 0.95rem; line-height: 1.5; }
+        h2 { margin-top: 0; color: var(--primary); font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem; }
+        p { color: var(--text-light); font-size: 0.9rem; line-height: 1.5; margin-bottom: 1rem; }
+        
+        /* Contenedor del Mapa */
+        #map {
+            width: 100%;
+            height: 250px;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            z-index: 1;
+        }
+
+        /* Estilos de Botones y Formularios */
         .btn {
             background-color: var(--primary);
             color: white;
             border: none;
-            padding: 0.75rem 1.25rem;
-            border-radius: 8px;
-            font-weight: bold;
+            padding: 0.85rem 1rem;
+            border-radius: 10px;
+            font-weight: 600;
             cursor: pointer;
             width: 100%;
-            font-size: 1rem;
-            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
         }
-        .btn:active { opacity: 0.9; }
+        .btn:hover { background-color: var(--primary-dark); }
+        .btn-success { background-color: var(--accent); }
+        .btn-success:hover { background-color: #16a34a; }
+
+        .form-group {
+            margin-bottom: 0.85rem;
+        }
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+            color: var(--text);
+        }
+        select, input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+            background-color: #f8fafc;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: #fff;
+        }
+
+        #report-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .report-item {
+            background: #f8fafc;
+            border-left: 4px solid var(--primary);
+            padding: 0.75rem;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+        }
+        .report-item.estacionamiento { border-left-color: var(--accent); }
     </style>
 </head>
 <body>
 
     <header>
         <h1>GuíaUrbana PRO</h1>
+        <p>Movilidad inteligente y comunidad en tiempo real</p>
     </header>
 
     <main>
+        <!-- Tarjeta de Mapa y GPS -->
         <div class="card">
-            <h2>Movilidad y Comunidad</h2>
-            <p>Bienvenida a tu panel de transporte, rutas optimizadas y reportes de estacionamientos en tiempo real.</p>
-            <button class="btn" onclick="getLocation()">Consultar mi ubicación GPS</button>
-            <p id="gps-status" style="margin-top: 0.75rem; font-weight: 500;"></p>
+            <h2>📍 Tu Ubicación y Mapa</h2>
+            <div id="map"></div>
+            <button class="btn" onclick="centerMap()">Centrar en mi ubicación GPS</button>
+            <p id="gps-status" style="margin-top: 0.75rem; font-size: 0.85rem; text-align: center;"></p>
         </div>
 
+        <!-- Tarjeta de Formulario de Reportes -->
         <div class="card">
-            <h2>Reportes Activos</h2>
-            <p>Aquí visualizarás las alertas comunitarias sobre el estado del tráfico y cajones libres cerca de ti.</p>
+            <h2>📢 Reporte Comunitario</h2>
+            <form id="reportForm" onsubmit="handleReport(event)">
+                <div class="form-group">
+                    <label for="reportType">Tipo de Alerta</label>
+                    <select id="reportType" required>
+                        <option value="trafico">🚨 Tráfico pesado / Incidente vial</option>
+                        <option value="estacionamiento">🅿️ Espacio de estacionamiento libre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reportDesc">Descripción breve</label>
+                    <input type="text" id="reportDesc" placeholder="Ej: Cajón libre frente al parque..." required>
+                </div>
+                <button type="submit" class="btn btn-success">Enviar Reporte</button>
+            </form>
+        </div>
+
+        <!-- Tarjeta de Reportes Activos -->
+        <div class="card">
+            <h2>📋 Reportes Recientes</h2>
+            <ul id="report-list">
+                <li class="report-item">Cargando reportes de la comunidad...</li>
+            </ul>
         </div>
     </main>
 
+    <!-- Leaflet JS para el Mapa -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
     <script>
-        // Registro del Service Worker para habilitar funciones de PWA
+        // Registro del Service Worker
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
-                    .catch(err => console.log('Error al registrar el Service Worker:', err));
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW error:', err));
             });
         }
 
-        // Función de ejemplo para geolocalización
-        function getLocation() {
+        // Inicializar el mapa centrado por defecto
+        let map = L.map('map').setView([-12.0464, -77.0428], 13);
+        let marker;
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Obtener Geolocalización real y actualizar mapa
+        function centerMap() {
             const status = document.getElementById('gps-status');
             if (!navigator.geolocation) {
                 status.textContent = 'La geolocalización no es compatible con tu navegador.';
                 return;
             }
-            status.textContent = 'Buscando ubicación...';
+            status.textContent = 'Buscando tu posición exacta...';
+            
             navigator.geolocation.getCurrentPosition(
                 position => {
-                    const lat = position.coords.latitude.toFixed(4);
-                    const lon = position.coords.longitude.toFixed(4);
-                    status.textContent = `📍 Ubicación detectada: Lat ${lat}, Lon ${lon}`;
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    map.setView([lat, lon], 16);
+                    if (marker) {
+                        marker.setLatLng([lat, lon]);
+                    } else {
+                        marker = L.marker([lat, lon]).addTo(map)
+                            .bindPopup('<b>¡Estás aquí!</b>').openPopup();
+                    }
+                    status.textContent = `📍 Ubicación actual: Lat ${lat.toFixed(4)}, Lon ${lon.toFixed(4)}`;
                 },
                 () => {
-                    status.textContent = 'No se pudo obtener la ubicación (permiso denegado o error).';
-                }
+                    status.textContent = 'No se pudo obtener el GPS. Verifica los permisos.';
+                },
+                { enableHighAccuracy: true }
             );
+        }
+
+        // Ejecutar al cargar la página
+        window.onload = () => {
+            centerMap();
+            loadReports();
+        };
+
+        // Manejo de Reportes Comunitarios (Simulación local)
+        function handleReport(e) {
+            e.preventDefault();
+            const type = document.getElementById('reportType').value;
+            const desc = document.getElementById('reportDesc').value;
+
+            const newReport = { type, desc, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) };
+            
+            let reports = JSON.parse(localStorage.getItem('guia_reports') || '[]');
+            reports.unshift(newReport);
+            localStorage.setItem('guia_reports', JSON.stringify(reports));
+
+            document.getElementById('reportDesc').value = '';
+            loadReports();
+            alert('¡Reporte enviado con éxito a la comunidad!');
+        }
+
+        function loadReports() {
+            const list = document.getElementById('report-list');
+            let reports = JSON.parse(localStorage.getItem('guia_reports') || '[]');
+            
+            if (reports.length === 0) {
+                list.innerHTML = '<li class="report-item">No hay reportes recientes. ¡Sé el primero en reportar!</li>';
+                return;
+            }
+
+            list.innerHTML = reports.map(r => `
+                <li class="report-item ${r.type}">
+                    <strong>${r.type === 'trafico' ? '🚨 Tráfico' : '🅿️ Estacionamiento'} (${r.time}):</strong> ${r.desc}
+                </li>
+            `).join('');
         }
     </script>
 </body>
