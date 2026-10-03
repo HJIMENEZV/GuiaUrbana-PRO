@@ -1,0 +1,21 @@
+{
+  "name": "GuíaUrbana PRO",
+  "short_name": "GuíaUrbana",
+  "description": "App de movilidad urbana, transporte y reportes comunitarios.",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192.png?text=GU",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512.png?text=GU",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

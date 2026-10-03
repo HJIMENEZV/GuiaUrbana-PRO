@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GuíaUrbana PRO</title>
+    <!-- Enlace al Manifest para la PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2563eb">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --background: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-light: #64748b;
+        }
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        main {
+            flex: 1;
+            padding: 1.5rem;
+            max-width: 600px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 1.25rem;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+        h2 { margin-top: 0; color: var(--primary); font-size: 1.25rem; }
+        p { color: var(--text-light); font-size: 0.95rem; line-height: 1.5; }
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+        .btn:active { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>GuíaUrbana PRO</h1>
+    </header>
+
+    <main>
+        <div class="card">
+            <h2>Movilidad y Comunidad</h2>
+            <p>Bienvenida a tu panel de transporte, rutas optimizadas y reportes de estacionamientos en tiempo real.</p>
+            <button class="btn" onclick="getLocation()">Consultar mi ubicación GPS</button>
+            <p id="gps-status" style="margin-top: 0.75rem; font-weight: 500;"></p>
+        </div>
+
+        <div class="card">
+            <h2>Reportes Activos</h2>
+            <p>Aquí visualizarás las alertas comunitarias sobre el estado del tráfico y cajones libres cerca de ti.</p>
+        </div>
+    </main>
+
+    <script>
+        // Registro del Service Worker para habilitar funciones de PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
+                    .catch(err => console.log('Error al registrar el Service Worker:', err));
+            });
+        }
+
+        // Función de ejemplo para geolocalización
+        function getLocation() {
+            const status = document.getElementById('gps-status');
+            if (!navigator.geolocation) {
+                status.textContent = 'La geolocalización no es compatible con tu navegador.';
+                return;
+            }
+            status.textContent = 'Buscando ubicación...';
+            navigator.geolocation.getCurrentPosition(
+                position => {
+                    const lat = position.coords.latitude.toFixed(4);
+                    const lon = position.coords.longitude.toFixed(4);
+                    status.textContent = `📍 Ubicación detectada: Lat ${lat}, Lon ${lon}`;
+                },
+                () => {
+                    status.textContent = 'No se pudo obtener la ubicación (permiso denegado o error).';
+                }
+            );
+        }
+    </script>
+</body>
+</html>
