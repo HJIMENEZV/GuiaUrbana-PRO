@@ -13,7 +13,7 @@
             --primary: #ccff00;
             --primary-hover: #b3e000;
             --bg: #0b0f19;
-            --card-bg: rgba(18, 24, 38, 0.88);
+            --card-bg: rgba(18, 24, 38, 0.92);
             --border: rgba(255, 255, 255, 0.08);
             --text: #f8fafc;
             --text-muted: #94a3b8;
@@ -310,10 +310,10 @@
         let stopsList = [];
         let totalDistanceKm = 0;
 
-        // Capa de mapa oscura CartoDB
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        // Capa estándar de OpenStreetMap (Libre y sin restricciones de API Key)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
-            attribution: '&copy; OpenStreetMap & CartoDB'
+            attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
         function centerMap() {
@@ -460,12 +460,10 @@
 
             const container = document.getElementById('chatMessages');
             
-            // Mensaje del usuario
             container.innerHTML += `<div class="chat-bubble user">${text}</div>`;
             input.value = '';
             container.scrollTop = container.scrollHeight;
 
-            // Simulación de respuesta inteligente de la IA
             setTimeout(() => {
                 let reply = "Entendido. Como asistente de GuíaUrbana PRO, te sugiero mantener activado el seguimiento GPS para optimizar tus paradas y evitar zonas de tráfico pesado.";
                 const lower = text.toLowerCase();
